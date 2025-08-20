@@ -59,7 +59,7 @@ def doctor_detail(request):
 
 
 @api_view(['GET','PUT','DELETE'])
-def doctor_detail(request,pk):
+def doctor_details(request,pk):
     try:
         doctor=Doctor.objects.get(pk=pk)
     except Doctor.DoesNotExist:
@@ -84,4 +84,45 @@ def doctor_detail(request,pk):
     
    
 
+
+@api_view(['GET','POST'])
+def patient_detail(request):
+    if request.method=='GET':
+        patient=Patient.objects.all()
+        seriaizer=PatientSerializer(patient,many=True)
+        return Response(seriaizer.data)
+    
+
+    elif request.method=='POST':
+        serializer=PatientSerializer(data=request.data)
+        if serializer.is_valid():
+            seriaizer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET','PUT','DELETE'])
+def patient_details(request,pk):
+    if request.method=='GET':
+        patient=Patient.objects.get(pk=pk)
+        serializer=PatientSerializer(patient)
+        return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+    
+
+    elif request.method=='PUT':
+        patient=Patient.objects.get(pk=pk)
+        serializer=PatientSerializer(patient,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            serializer=PatientSerializer(patient)
+            return Response({"msg":"sucess","user":serializer.data},status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+    elif request.method=='DELETE':
+        patient=Patient.objects.get(pk=pk)
+        patient.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+
+    
 
