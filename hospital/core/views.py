@@ -133,7 +133,7 @@ def appointment_detail(request):
         serializer=AppointmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data,status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method=='GET':
@@ -141,3 +141,29 @@ def appointment_detail(request):
         serializer=AppointmentSerializer(appointment,many=True)
         return Response(serializer.data)
     
+
+
+
+
+@api_view(['GET','PUT','DELETE'])
+def appointment_details(request,pk):
+    if request.method=='GET':
+        appointment=Appointment.objects.get(pk=pk)
+        serializer=AppointmentSerializer(appointment)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+ 
+    elif request.method=='PUT':
+        appointment=Appointment.objects.get(pk=pk)
+        serializer=AppointmentSerializer(appointment,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.error,status=status.HTTP_400_BAD_REQUEST)
+    
+
+    elif request.method=='DELETE':
+        appointment=Appointment.objects.get(pk=pk)
+        appointment.delete()
+        return Response({"message":"Appointment is deleted"})
+
+
