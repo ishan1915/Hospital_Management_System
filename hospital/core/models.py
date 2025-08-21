@@ -18,3 +18,15 @@ class Patient(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+
+
+class Appointment(models.Model):
+    patient=models.ForeignKey(Patient,on_delete=models.CASCADE)
+    doctor=models.ForeignKey(Doctor,on_delete=models.CASCADE)
+    date=models.DateField()
+    time=models.TimeField()
+    reason=models.TextField()
+
+    def __str__(self):
+        return f"{self.patient.user.username} appointed to {self.doctor.user.username} on {self.date}"
