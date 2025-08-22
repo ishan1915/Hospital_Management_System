@@ -19,5 +19,7 @@ urlpatterns = [
 
 
    path('medical_record/',medical_details,name='medical_record'),
+    path('medical_records/<int:pk>/',medical_records,name='medical_records'),
+
 
 ]

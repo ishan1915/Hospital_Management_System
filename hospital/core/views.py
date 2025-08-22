@@ -202,3 +202,27 @@ def medical_details(request):
             serializer.save()
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET','PUT','DELETE'])
+def medical_records(request,pk):
+    if request.method=='GET':
+        medical=MedicalRecord.objects.get(pk=pk)
+        serializer=MedicalSerializer(medical)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+    
+    elif request.method=='PUT':
+        medical=MedicalRecord.objects.get(pk=pk)
+        serializer=MedicalSerializer(medical,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response (serializer.data,status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method=='DELETE':
+        medical=MedicalRecord.objects.get(pk=pk)
+        medical.delete()
+        return Response({"message":"deleted"})
+    
+    
