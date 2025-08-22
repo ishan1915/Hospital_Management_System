@@ -225,4 +225,12 @@ def medical_records(request,pk):
         medical.delete()
         return Response({"message":"deleted"})
     
-    
+@api_view(['POST'])
+@permission_classes([AllowAny]) 
+def signup_view(request):
+    serializer=SignupSerializer(data=request.data)
+    if serializer.is_valid():
+        user=serializer.save()
+        serializer=UserSerializer(user)
+        return Response({"message":"user created sucessfully","user":serializer.data},status=status.HTTP_201_CREATED)
+    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
