@@ -39,6 +39,8 @@ class PatientSerializer(serializers.ModelSerializer):
         model=Patient
         fields='__all__'
 
+    
+
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

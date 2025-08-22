@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import login,logout,authenticate
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view,permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAdminUser,IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import *
@@ -31,7 +31,7 @@ def login_view(request):
         login(request,user)
         serializer=UserSerializer(user)
         return Response({"msg":"login sucessfull","user":serializer.data},status=status.HTTP_200_OK)
-    return Response(serializer.errors ,status=status.HTTP_404_NOT_FOUND)
+    return Response({"error": "Invalid credentials"},status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -42,7 +42,7 @@ def logout_view(request):
 
 
 @api_view(['POST','GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def doctor_detail(request):
     if request.method=='GET':
       doctors=Doctor.objects.all()
@@ -59,6 +59,7 @@ def doctor_detail(request):
 
 
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAdminUser])
 def doctor_details(request,pk):
     try:
         doctor=Doctor.objects.get(pk=pk)
@@ -86,6 +87,7 @@ def doctor_details(request,pk):
 
 
 @api_view(['GET','POST'])
+@permission_classes([IsAdminUser])
 def patient_detail(request):
     if request.method=='GET':
         patient=Patient.objects.all()
@@ -101,6 +103,7 @@ def patient_detail(request):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAdminUser])
 def patient_details(request,pk):
     if request.method=='GET':
         patient=Patient.objects.get(pk=pk)
@@ -128,6 +131,7 @@ def patient_details(request,pk):
     
 
 @api_view(['POST','GET' ])
+@permission_classes([IsAdminUser])
 def appointment_detail(request):
     if request.method=='POST':
         serializer=AppointmentSerializer(data=request.data)
@@ -146,6 +150,7 @@ def appointment_detail(request):
 
 
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAdminUser])
 def appointment_details(request,pk):
     if request.method=='GET':
         appointment=Appointment.objects.get(pk=pk)
@@ -165,6 +170,47 @@ def appointment_details(request,pk):
         appointment=Appointment.objects.get(pk=pk)
         appointment.delete()
         return Response({"message":"Appointment is deleted"})
+
+
+
+@api_view(['GET','POST'])
+@permission_classes([IsAdminUser])
+def medical_details(request):
+    if request.method=='GET':
+        medical=MedicalRecord.objects.all()
+        serializer=MedicalSerializer(medical,many=True)
+        return Response(serializer.data,status=200)
+    
+    elif request.method=='POST':
+        serializer=MedicalSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAdminUser])
+def medical_records(request,pk):
+    if request.method=='GET':
+        medical=MedicalRecord.objects.get(pk=pk)
+        serializer=MedicalSerializer(medical)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+    
+    elif request.method=='PUT':
+        medical=MedicalRecord.objects.get(pk=pk)
+        serializer=MedicalSerializer(medical,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response (serializer.data,status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method=='DELETE':
+        medical=MedicalRecord.objects.get(pk=pk)
+        medical.delete()
+        return Response({"message":"deleted"})
+    
 
 
 @api_view(['POST'])
@@ -189,39 +235,16 @@ def user_appointmentlist(request):
     serializer=AppointmentSerializer(appointment,many=True)
     return Response(serializer.data)
 
-@api_view(['GET','POST'])
-def medical_details(request):
-    if request.method=='GET':
-        medical=MedicalRecord.objects.all()
-        serializer=MedicalSerializer(medical,many=True)
-        return Response(serializer.data,status=200)
-    
-    elif request.method=='POST':
-        serializer=MedicalSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
 
-@api_view(['GET','PUT','DELETE'])
-def medical_records(request,pk):
-    if request.method=='GET':
-        medical=MedicalRecord.objects.get(pk=pk)
-        serializer=MedicalSerializer(medical)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
-    elif request.method=='PUT':
-        medical=MedicalRecord.objects.get(pk=pk)
-        serializer=MedicalSerializer(medical,data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response (serializer.data,status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
-    elif request.method=='DELETE':
-        medical=MedicalRecord.objects.get(pk=pk)
-        medical.delete()
-        return Response({"message":"deleted"})
-    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_dashboard(request):
+    user=request.user
+    serializer=UserSerializer(user)
+    patient=Patient.objects.get(user=request.user)
+    appointment=Appointment.objects.filter(patient=patient)
+    appointment_serializer=AppointmentSerializer(appointment,many=True)
+
+    return Response({"user":serializer.data, "appointment":appointment_serializer.data})
+
