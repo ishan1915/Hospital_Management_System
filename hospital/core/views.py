@@ -243,8 +243,41 @@ def user_dashboard(request):
     user=request.user
     serializer=UserSerializer(user)
     patient=Patient.objects.get(user=request.user)
-    appointment=Appointment.objects.filter(patient=patient)
+    appointment=Appointment.objects.filter(patient=patient).order_by('-date')
     appointment_serializer=AppointmentSerializer(appointment,many=True)
 
     return Response({"user":serializer.data, "appointment":appointment_serializer.data})
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def doctor_dashboard(request):
+    user=request.user
+    serializer=UserSerializer(user)
+    doctor=Doctor.objects.get(user=request.user)
+    appointment=Appointment.objects.filter(doctor=doctor).order_by('-date','-time')
+    appointment_serializer=AppointmentSerializer(appointment,many=True)
+    return Response({"user":serializer.data,"appointment":appointment_serializer.data})
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])   
+def doctor_patient_details(request):
+    user = request.user
+
+    try:
+        doctor = Doctor.objects.get(user=user)
+    except Doctor.DoesNotExist:
+        return Response({"error": "Doctor not found"}, status=404)
+
+    # Get all patients for this doctor (if you have a relation like doctor -> patients)
+    # Assuming patients are associated with the doctor (via ForeignKey in Appointment or other means)
+    patients = Patient.objects.filter(appointment__doctor=doctor).distinct()  # or any other relationship you may have
+
+    # Serialize the patient details
+    serializer = PatientSerializer(patients, many=True)
+    return Response(serializer.data)
 

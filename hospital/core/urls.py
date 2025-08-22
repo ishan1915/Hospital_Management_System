@@ -31,5 +31,10 @@ urlpatterns = [
 
    path('user_dashboard/',user_dashboard,name='user_dashboard'),
 
+  #doctor related urls
+  path('doctor_dashboard/',doctor_dashboard,name='doctor_dashboard'),
+  path('doctor_patient/',doctor_patient_details,name='doctor_patient'),
+
+
 
 ]
