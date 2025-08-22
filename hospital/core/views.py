@@ -167,3 +167,38 @@ def appointment_details(request,pk):
         return Response({"message":"Appointment is deleted"})
 
 
+@api_view(['POST'])
+def book_appointment(request):
+    patient=Patient.objects.get(user=request.user)
+    data=request.data.copy()
+    data['patient']=patient.id
+    serializer=AppointmentSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors)
+
+
+@api_view(['GET'])
+def user_appointmentlist(request):
+    try:
+        patient=Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        return Response({"msg":"patient not exist"})
+    appointment=Appointment.objects.filter(patient=patient).order_by('-date','-time')
+    serializer=AppointmentSerializer(appointment,many=True)
+    return Response(serializer.data)
+
+@api_view(['GET','POST'])
+def medical_details(request):
+    if request.method=='GET':
+        medical=MedicalRecord.objects.all()
+        serializer=MedicalSerializer(medical,many=True)
+        return Response(serializer.data,status=200)
+    
+    elif request.method=='POST':
+        serializer=MedicalSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

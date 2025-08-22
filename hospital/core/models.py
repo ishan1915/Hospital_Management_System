@@ -30,3 +30,16 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient.user.username} appointed to {self.doctor.user.username} on {self.date}"
+
+
+
+class MedicalRecord(models.Model):
+    patient=models.ForeignKey(Patient,on_delete=models.CASCADE)
+    doctor=models.ForeignKey(Doctor,on_delete=models.CASCADE)
+    diagnosis=models.TextField()
+    prescription = models.TextField()
+    created_at=models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.patient.user.username} diagnosis by {self.doctor.user.username} on {self.created_at}"
+
