@@ -23,7 +23,12 @@ class SignupSerializer(serializers.ModelSerializer):
             )
             return user
 
-
+        def validate_email(self,value):
+            if User.objects.filter(email=value).exists():
+                raise serializers.ValidationError("email already exist")
+            
+            if not value.endswith('@gmail.com'):
+                raise serializers.ValidationError("gmail is only allowed")
 
 
 
@@ -31,6 +36,11 @@ class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model=Doctor
         fields='__all__'
+         
+        def validate_phone(self, value):
+          if value and not value.isdigit():
+            raise serializers.ValidationError("Phone number must contain only digits")
+          return value
 
 
 
@@ -54,3 +64,6 @@ class MedicalSerializer(serializers.ModelSerializer):
     class Meta:
         model=MedicalRecord
         fields='__all__'
+
+
+

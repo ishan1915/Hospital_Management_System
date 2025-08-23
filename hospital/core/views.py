@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from django.contrib.auth import login,logout,authenticate
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view,permission_classes
@@ -262,7 +262,7 @@ def doctor_dashboard(request):
     return Response({"user":serializer.data,"appointment":appointment_serializer.data})
 
 
-
+#doctor will get details of his patient
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])   
 def doctor_patient_details(request):
@@ -273,11 +273,43 @@ def doctor_patient_details(request):
     except Doctor.DoesNotExist:
         return Response({"error": "Doctor not found"}, status=404)
 
-    # Get all patients for this doctor (if you have a relation like doctor -> patients)
-    # Assuming patients are associated with the doctor (via ForeignKey in Appointment or other means)
-    patients = Patient.objects.filter(appointment__doctor=doctor).distinct()  # or any other relationship you may have
-
-    # Serialize the patient details
+    patients = Patient.objects.filter(appointment__doctor=doctor).distinct()   
     serializer = PatientSerializer(patients, many=True)
     return Response(serializer.data)
 
+
+#patient will able to see his doctor details
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_doctordetails(request):
+    user=request.user
+    patient=get_object_or_404(Patient,user=user)
+    doctor=Doctor.objects.filter(appointment__patient=patient)
+    serializer=DoctorSerializer(doctor,many=True)
+    return Response(serializer.data)
+    
+
+#doctor will able to create medicalRecord
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def doctor_createMedicalReport(request):
+    user=request.user
+    doctor=Doctor.objects.get(user=user)
+    data=request.data.copy()
+    data['doctor']=doctor.id
+    serializer=MedicalSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors)
+
+
+
+#patient will able to see his medicalrecord
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_medicaldetails(request):
+    patient=Patient.objects.get(user=request.user)
+    medical_records=MedicalRecord.objects.filter(patient=patient).order_by('-created_at')
+    serializer=MedicalSerializer(medical_records,many=True)
+    return Response(serializer.data,status=status.HTTP_200_OK)

@@ -4,7 +4,9 @@ from django.contrib.auth.models import User
 
 class Doctor(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
+    name=models.CharField(max_length=20,null=True)
     specialization=models.CharField(max_length=100)
+    experience_years=models.IntegerField(null=True)
     phone=models.CharField(max_length=15)
 
     def __str__(self):
@@ -12,9 +14,11 @@ class Doctor(models.Model):
     
 
 class Patient(models.Model):
+    name=models.CharField(max_length=20,null=True)
     user=models.OneToOneField(User,on_delete=models.CASCADE)
     age=models.IntegerField()
     address=models.TextField()
+    blood_group=models.CharField(max_length=10,null=True)
 
     def __str__(self):
         return self.user.username
